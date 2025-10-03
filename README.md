@@ -23,9 +23,8 @@ GitHire is a web application that helps developers analyze their GitHub reposito
     *   [TypeScript](https://www.typescriptlang.org/)
     *   [Tailwind CSS](https://tailwindcss.com/)
     *   [Radix UI](https://www.radix-ui.com/) & [shadcn/ui](https://ui.shadcn.com/) for components
-*   **Backend:**
-    *   [Supabase](https://supabase.io/)
-*   **Deployment:** [Vercel](https://githire.digitalstepps.com/)
+*   **Deployment:** 
+    *   [Vercel](https://githire.digitalstepps.com/)
 
 ## Getting Started
 
@@ -45,12 +44,6 @@ To get a local copy up and running, follow these simple steps.
 2.  Install NPM packages
     ```sh
     npm install
-    ```
-3.  Set up your Supabase project and get your project ID and anon key.
-4.  Create a `.env` file in the root of the project and add your Supabase credentials:
-    ```
-    VITE_SUPABASE_URL=YOUR_SUPABASE_URL
-    VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
     ```
 
 ### Running the Application
