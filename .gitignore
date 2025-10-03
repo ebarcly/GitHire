@@ -32,3 +32,4 @@ core
 .env
 .env.local
 
+tempo.config.json
