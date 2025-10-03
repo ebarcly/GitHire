@@ -191,7 +191,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <div className="container mx-auto px-4 py-8 text-center text-slate-600">
-        <p>© 2024 GitHub Repo Analyzer. Built with ❤️ for developers.</p>
+        <p>© 2025 GitHub Repo Analyzer. Built with ❤️ for developers.</p>
       </div>
     </div>
   );
