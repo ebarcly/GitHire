@@ -1,6 +1,6 @@
 # GitHire: Transform Your GitHub Profile into a Hiring Magnet
 
-![GitHire Landing Page](https://imgur.com/BfnZU2O) 
+<blockquote class="imgur-embed-pub" lang="en" data-id="BfnZU2O"><a href="https://imgur.com/BfnZU2O">View post on imgur.com</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script> 
 
 ## Introduction
 
