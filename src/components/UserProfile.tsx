@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { progressTrackingService, AnalysisResult } from '../services/progressTrackingService'
+import { supabase } from '../lib/supabase'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
@@ -39,11 +40,13 @@ export default function UserProfile() {
   const [repoHistory, setRepoHistory] = useState<AnalysisResult[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
 
+
   useEffect(() => {
     if (user) {
       loadUserRepositories()
     }
   }, [user])
+
 
   const loadUserRepositories = async () => {
     if (!user) return

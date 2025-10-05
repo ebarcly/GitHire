@@ -38,7 +38,7 @@ export default function LandingPage() {
                 Profile
               </Button>
               <Button onClick={() => navigate('/home')}>
-                Dashboard
+                Analyze
               </Button>
             </div>
           ) : (
