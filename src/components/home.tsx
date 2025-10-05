@@ -1,21 +1,28 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { progressTrackingService } from "../services/progressTrackingService";
 import ScoreCard from "./ScoreCard";
 import VisualizationPanel from "./VisualizationPanel";
 import RecommendationPanel from "./RecommendationPanel";
 import InsightsPanel from "./InsightsPanel";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Github, Download, AlertCircle, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Github, Download, AlertCircle, Loader2, User, LogOut, History } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { githubService } from "../services/githubService";
 import { analysisEngine, AnalysisResult } from "../services/analysisEngine";
 import { reportGenerator } from "../services/reportGenerator";
 
 function Home() {
+  const navigate = useNavigate();
+  const { user, signInWithGitHub, signOut } = useAuth();
   const [repoUrl, setRepoUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleAnalyze = async () => {
     if (!repoUrl.trim()) return;
@@ -31,6 +38,35 @@ function Home() {
       const analysis = analysisEngine.analyze(repoData);
       
       setAnalysisData(analysis);
+
+      // Save analysis if user is authenticated
+      if (user && analysis) {
+        setIsSaving(true);
+        try {
+          await progressTrackingService.saveAnalysis({
+            user_id: user.id,
+            repository_url: repoUrl,
+            repository_name: analysis.repoInfo.name,
+            overall_score: analysis.score.overall,
+            code_quality_score: analysis.score.codeQuality,
+            documentation_score: analysis.score.documentation,
+            structure_score: analysis.score.structure,
+            recommendations: analysis.recommendations.map(r => r.title),
+            analysis_data: {
+              repoInfo: analysis.repoInfo,
+              metrics: analysis.metrics,
+              technologies: analysis.technologies,
+              skillGaps: analysis.skillGaps,
+              insights: analysis.insights
+            }
+          });
+        } catch (saveError) {
+          console.error('Error saving analysis:', saveError);
+          // Don't show error to user as analysis still worked
+        } finally {
+          setIsSaving(false);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze repository');
       setAnalysisData(null);
@@ -50,16 +86,84 @@ function Home() {
     }
   };
 
+  const handleSignIn = async () => {
+    try {
+      await signInWithGitHub();
+    } catch (error) {
+      console.error('Error signing in:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Github className="w-8 h-8 text-slate-700" />
-            <h1 className="text-3xl font-bold text-slate-900">GitHub Repo Analyzer</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Github className="w-8 h-8 text-slate-700" />
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">GitHub Repo Analyzer</h1>
+                <p className="text-slate-600">Analyze your repositories and get actionable insights to boost your employability</p>
+              </div>
+            </div>
+            
+            {/* User Menu */}
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <Button variant="outline" onClick={() => navigate('/profile')}>
+                    <History className="w-4 h-4 mr-2" />
+                    View Progress
+                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback>
+                        <User className="w-4 h-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-sm">
+                      <div className="font-medium">{user.user_metadata?.full_name || user.email}</div>
+                      <div className="text-slate-500">@{user.user_metadata?.user_name}</div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={signOut}>
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <Button variant="outline" onClick={handleSignIn}>
+                  <Github className="w-4 h-4 mr-2" />
+                  Sign in to Track Progress
+                </Button>
+              )}
+            </div>
           </div>
-          <p className="text-slate-600">Analyze your repositories and get actionable insights to boost your employability</p>
+
+          {/* Progress Tracking Notice */}
+          {!user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Github className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-blue-900">Track Your Progress Over Time</h3>
+                  <p className="text-blue-700 text-sm mt-1">
+                    Sign in with GitHub to save your analyses and see how your repositories improve over time. 
+                    Compare scores from different analysis dates and track your development journey.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="mt-3 bg-blue-600 hover:bg-blue-700"
+                    onClick={handleSignIn}
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    Sign in with GitHub
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Input Section */}
@@ -89,6 +193,14 @@ function Home() {
               )}
             </Button>
           </div>
+          
+          {/* Saving indicator */}
+          {isSaving && (
+            <div className="mt-3 text-sm text-blue-600 flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving analysis to your profile...
+            </div>
+          )}
           
           {/* Example URLs */}
           <div className="mt-4 text-sm text-slate-500">
@@ -139,6 +251,12 @@ function Home() {
                   <h2 className="text-xl font-bold text-slate-900">{analysisData.repoInfo.name}</h2>
                   {analysisData.repoInfo.description && (
                     <p className="text-slate-600 mt-1">{analysisData.repoInfo.description}</p>
+                  )}
+                  {user && (
+                    <div className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                      <Github className="w-4 h-4" />
+                      Analysis saved to your profile
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-4 text-sm text-slate-600">
@@ -193,6 +311,16 @@ function Home() {
                 <Download className="w-4 h-4" />
                 Generate Report
               </Button>
+              {user && (
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/profile')}
+                  className="gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  View All Analyses
+                </Button>
+              )}
             </div>
           </div>
         )}
