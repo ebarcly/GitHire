@@ -7,6 +7,7 @@ import { Badge } from './ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Progress } from './ui/progress'
+import { Alert, AlertDescription } from './ui/alert'
 import { 
   Github, 
   LogOut, 
@@ -16,7 +17,10 @@ import {
   GitBranch,
   Star,
   BarChart3,
-  History
+  History,
+  AlertCircle,
+  Loader2,
+  RefreshCw
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -30,8 +34,10 @@ export default function UserProfile() {
   const { user, signOut } = useAuth()
   const [repositories, setRepositories] = useState<Repository[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null)
   const [repoHistory, setRepoHistory] = useState<AnalysisResult[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -42,11 +48,17 @@ export default function UserProfile() {
   const loadUserRepositories = async () => {
     if (!user) return
     
+    setLoading(true)
+    setError(null)
+    
     try {
+      console.log('Loading repositories for user:', user.id)
       const repos = await progressTrackingService.getUniqueRepositories(user.id)
+      console.log('Loaded repositories:', repos)
       setRepositories(repos)
     } catch (error) {
       console.error('Error loading repositories:', error)
+      setError('Failed to load your repositories. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -55,12 +67,18 @@ export default function UserProfile() {
   const loadRepositoryHistory = async (repositoryUrl: string) => {
     if (!user) return
     
+    setLoadingHistory(true)
     try {
+      console.log('Loading history for repository:', repositoryUrl)
       const history = await progressTrackingService.getRepositoryHistory(user.id, repositoryUrl)
+      console.log('Loaded history:', history)
       setRepoHistory(history)
       setSelectedRepo(repositoryUrl)
     } catch (error) {
       console.error('Error loading repository history:', error)
+      setError('Failed to load repository history. Please try again.')
+    } finally {
+      setLoadingHistory(false)
     }
   }
 
@@ -76,11 +94,33 @@ export default function UserProfile() {
     return null
   }
 
+  const calculateImprovement = (current: number, previous: number) => {
+    return current - previous
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center py-12">
+            <Github className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign in Required</h3>
+            <p className="text-gray-600 mb-4">Please sign in with GitHub to view your profile and track your progress.</p>
+            <Button onClick={() => window.location.href = '/'}>
+              <Github className="w-4 h-4 mr-2" />
+              Go to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <Loader2 className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Loading your profile...</p>
         </div>
       </div>
@@ -109,11 +149,25 @@ export default function UserProfile() {
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={loadUserRepositories} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -160,7 +214,7 @@ export default function UserProfile() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {repositories.reduce((sum, repo) => sum + (repoHistory.length || 1), 0)}
+                {repositories.length}
               </div>
             </CardContent>
           </Card>
@@ -236,8 +290,13 @@ export default function UserProfile() {
                           variant="outline" 
                           size="sm"
                           onClick={() => loadRepositoryHistory(repo.repository_url)}
+                          disabled={loadingHistory}
                         >
-                          <History className="w-4 h-4 mr-2" />
+                          {loadingHistory ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <History className="w-4 h-4 mr-2" />
+                          )}
                           View History
                         </Button>
                         <Button 
@@ -266,48 +325,76 @@ export default function UserProfile() {
                 </div>
                 
                 <div className="space-y-4">
-                  {repoHistory.map((analysis, index) => (
-                    <Card key={analysis.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">
-                            Analysis #{repoHistory.length - index}
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className={getScoreColor(analysis.overall_score)}>
-                              {analysis.overall_score}/100
-                            </Badge>
-                            {index > 0 && getImprovementIcon(analysis.overall_score - repoHistory[index - 1].overall_score)}
-                          </div>
-                        </div>
-                        <CardDescription>
-                          {format(new Date(analysis.created_at!), 'MMM d, yyyy \'at\' h:mm a')}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-sm text-gray-600">Code Quality</div>
-                            <div className={`text-lg font-semibold ${getScoreColor(analysis.code_quality_score)}`}>
-                              {analysis.code_quality_score}
+                  {repoHistory.map((analysis, index) => {
+                    const previousAnalysis = index < repoHistory.length - 1 ? repoHistory[index + 1] : null
+                    const overallImprovement = previousAnalysis ? calculateImprovement(analysis.overall_score, previousAnalysis.overall_score) : 0
+                    
+                    return (
+                      <Card key={analysis.id}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base">
+                              Analysis #{repoHistory.length - index}
+                            </CardTitle>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className={getScoreColor(analysis.overall_score)}>
+                                {analysis.overall_score}/100
+                              </Badge>
+                              {previousAnalysis && getImprovementIcon(overallImprovement)}
+                              {previousAnalysis && overallImprovement !== 0 && (
+                                <span className={`text-sm ${overallImprovement > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {overallImprovement > 0 ? '+' : ''}{overallImprovement}
+                                </span>
+                              )}
                             </div>
                           </div>
-                          <div className="text-center">
-                            <div className="text-sm text-gray-600">Documentation</div>
-                            <div className={`text-lg font-semibold ${getScoreColor(analysis.documentation_score)}`}>
-                              {analysis.documentation_score}
+                          <CardDescription>
+                            {format(new Date(analysis.created_at!), 'MMM d, yyyy \'at\' h:mm a')}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                              <div className="text-sm text-gray-600">Code Quality</div>
+                              <div className={`text-lg font-semibold ${getScoreColor(analysis.code_quality_score)}`}>
+                                {analysis.code_quality_score}
+                              </div>
+                              {previousAnalysis && (
+                                <div className={`text-xs ${calculateImprovement(analysis.code_quality_score, previousAnalysis.code_quality_score) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {calculateImprovement(analysis.code_quality_score, previousAnalysis.code_quality_score) > 0 ? '+' : ''}
+                                  {calculateImprovement(analysis.code_quality_score, previousAnalysis.code_quality_score)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-gray-600">Documentation</div>
+                              <div className={`text-lg font-semibold ${getScoreColor(analysis.documentation_score)}`}>
+                                {analysis.documentation_score}
+                              </div>
+                              {previousAnalysis && (
+                                <div className={`text-xs ${calculateImprovement(analysis.documentation_score, previousAnalysis.documentation_score) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {calculateImprovement(analysis.documentation_score, previousAnalysis.documentation_score) > 0 ? '+' : ''}
+                                  {calculateImprovement(analysis.documentation_score, previousAnalysis.documentation_score)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-gray-600">Structure</div>
+                              <div className={`text-lg font-semibold ${getScoreColor(analysis.structure_score)}`}>
+                                {analysis.structure_score}
+                              </div>
+                              {previousAnalysis && (
+                                <div className={`text-xs ${calculateImprovement(analysis.structure_score, previousAnalysis.structure_score) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {calculateImprovement(analysis.structure_score, previousAnalysis.structure_score) > 0 ? '+' : ''}
+                                  {calculateImprovement(analysis.structure_score, previousAnalysis.structure_score)}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-center">
-                            <div className="text-sm text-gray-600">Structure</div>
-                            <div className={`text-lg font-semibold ${getScoreColor(analysis.structure_score)}`}>
-                              {analysis.structure_score}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               </div>
             ) : (
