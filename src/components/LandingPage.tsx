@@ -1,12 +1,55 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
-import { Github, BarChart3, Target, Zap, ArrowRight, CheckCircle, TrendingUp } from "lucide-react";
+import { Github, BarChart3, Target, Zap, ArrowRight, CheckCircle, TrendingUp, User } from "lucide-react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user, signInWithGitHub } = useAuth();
+
+  const handleGetStarted = async () => {
+    if (user) {
+      navigate('/home');
+    } else {
+      try {
+        await signInWithGitHub();
+      } catch (error) {
+        console.error('Error signing in:', error);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      {/* Navigation */}
+      <nav className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
+              <Github className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900">RepoAnalyzer</span>
+          </div>
+          
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={() => navigate('/profile')}>
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </Button>
+              <Button onClick={() => navigate('/home')}>
+                Dashboard
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" onClick={signInWithGitHub}>
+              <Github className="w-4 h-4 mr-2" />
+              Sign in with GitHub
+            </Button>
+          )}
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto">
@@ -22,17 +65,26 @@ export default function LandingPage() {
           </h1>
           
           <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-            Get instant, actionable insights on your repositories. Discover what employers are looking for and boost your employability score with data-driven recommendations.
+            Get instant, actionable insights on your repositories. Track your progress over time and boost your employability score with data-driven recommendations.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8 py-6"
-              onClick={() => navigate('/home')}
+              onClick={handleGetStarted}
             >
-              Analyze Your Repo Now
-              <ArrowRight className="ml-2 w-5 h-5" />
+              {user ? (
+                <>
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </>
+              ) : (
+                <>
+                  <Github className="mr-2 w-5 h-5" />
+                  Sign in with GitHub
+                </>
+              )}
             </Button>
             <Button 
               size="lg" 
@@ -107,7 +159,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Track Progress</h3>
             <p className="text-slate-600">
-              Generate reports to share with mentors and track your improvement over time.
+              Sign in with GitHub to save your analyses and track improvement over time.
             </p>
           </div>
         </div>
@@ -125,9 +177,9 @@ export default function LandingPage() {
               1
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Enter Your Repository URL</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Sign in with GitHub</h3>
               <p className="text-slate-600">
-                Simply paste your GitHub repository URL. Works with any public repository.
+                Connect your GitHub account to enable progress tracking and personalized insights.
               </p>
             </div>
           </div>
@@ -137,7 +189,7 @@ export default function LandingPage() {
               2
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Get Instant Analysis</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Analyze Your Repositories</h3>
               <p className="text-slate-600">
                 Our AI analyzes your code, documentation, structure, and compares it against industry standards.
               </p>
@@ -149,9 +201,9 @@ export default function LandingPage() {
               3
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Implement & Improve</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Track Your Progress</h3>
               <p className="text-slate-600">
-                Follow personalized recommendations and watch your employability score soar.
+                Implement recommendations, re-analyze your repos, and watch your scores improve over time.
               </p>
             </div>
           </div>
@@ -171,7 +223,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-6 h-6" />
-              <span>No signup required</span>
+              <span>Progress tracking</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-6 h-6" />
@@ -181,10 +233,19 @@ export default function LandingPage() {
           <Button 
             size="lg" 
             className="bg-white text-purple-600 hover:bg-slate-100 text-lg px-8 py-6"
-            onClick={() => navigate('/home')}
+            onClick={handleGetStarted}
           >
-            Start Analyzing Now
-            <ArrowRight className="ml-2 w-5 h-5" />
+            {user ? (
+              <>
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </>
+            ) : (
+              <>
+                <Github className="mr-2 w-5 h-5" />
+                Get Started with GitHub
+              </>
+            )}
           </Button>
         </div>
       </div>
