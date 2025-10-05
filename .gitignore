@@ -29,7 +29,12 @@ core
 
 .github/
 
+# env variables
 .env
 .env.local
 
 tempo.config.json
+
+.prettierrc
+
+GEMINI.md
