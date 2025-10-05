@@ -3,7 +3,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   base: "/",
   optimizeDeps: {
@@ -11,16 +10,17 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    nodePolyfills(),
+    nodePolyfills({
+      globals: {
+        global: true,
+      },
+    }),
   ],
   resolve: {
     preserveSymlinks: true,
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  define: {
-    global: 'window',
   },
   server: {
     // @ts-ignore
