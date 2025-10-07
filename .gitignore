@@ -1,3 +1,15 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+dist-ssr
+
+# Vite cache
+# in case the cacheDir is changed.
+.vite/
+
 # Logs
 logs
 *.log
@@ -7,15 +19,14 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Local environment variables and secrets
+.env
+.env.local
 *.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+.vscode/
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -23,18 +34,15 @@ dist-ssr
 *.sln
 *.sw?
 
-!node_modules/.vite
+# Test coverage
+coverage/
 
+# Temporary files & OS-specific
 core
+.DS_Store
 
-.github/
-
-# env variables
-.env
-.env.local
-
-tempo.config.json
-
-.prettierrc
-
+# Gemini-specific file (do not commit)
 GEMINI.md
+
+# Local config
+tempo.config.json
