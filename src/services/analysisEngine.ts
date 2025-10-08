@@ -99,6 +99,10 @@ export class AnalysisEngine {
     const documentation = this.calculateDocumentation(repoData);
     const projectStructure = this.calculateProjectStructure(repoData);
 
+    // Overall score calculation with weighted importance:
+    // Code Quality (40%): Most critical factor - directly impacts code reliability and maintainability
+    // Documentation (30%): Essential for collaboration and project understanding
+    // Project Structure (30%): Important for scalability and professional development practices
     const overallScore = Math.round(
       codeQuality * 0.4 + documentation * 0.3 + projectStructure * 0.3
     );
@@ -142,44 +146,84 @@ export class AnalysisEngine {
   }
 
   private calculateCodeQuality(repoData: RepoData): number {
-    let score = 50;
+    let score = 40; // Base score: assumes average code quality without additional evidence
 
-    if (repoData.hasTests) score += 20;
+    // Testing is critical for code quality - 20 points for having any tests
+    // This is the highest single factor as testing directly impacts code reliability
+    if (repoData.hasTests) score += 15;
+
+    // CI/CD shows professional development practices - 15 points
+    // Indicates automated quality checks and deployment processes
     if (repoData.hasCi) score += 15;
+
+    // License shows project maturity and legal awareness - 5 points
+    // Small but important for professional open source work
     if (repoData.hasLicense) score += 5;
+
+    // Active development history - 5 points for moderate activity (50+ commits)
+    // Shows sustained development effort and project evolution
     if (repoData.commits > 50) score += 5;
+
+    // Very active development - additional 5 points for 100+ commits
+    // Indicates significant project scope and developer dedication
     if (repoData.commits > 100) score += 5;
+
+    // Collaborative development - 5 points for multiple contributors
+    // Shows ability to work in teams and code review practices
     if (repoData.contributors > 1) score += 5;
+
+    // Strong collaboration - additional 5 points for 5+ contributors
+    // Indicates mature project with community involvement
     if (repoData.contributors > 5) score += 5;
+
+    // Low issue count indicates good maintenance - 5 points for <10 open issues
+    // Shows active bug fixing and project health
     if (repoData.openIssues < 10) score += 5;
 
     return Math.min(100, score);
   }
 
   private calculateDocumentation(repoData: RepoData): number {
-    let score = 30;
+    let score = 30; // Base score: minimal documentation expected for any project
 
+    // README is essential for project understanding - 30 points
+    // This is the highest factor as README is the first thing users see
     if (repoData.hasReadme) score += 30;
+
+    // Additional documentation shows thoroughness - 20 points
+    // Indicates comprehensive project documentation beyond basic README
     if (repoData.hasDocumentation) score += 20;
+
+    // Meaningful description shows project clarity - 10 points for >20 chars
+    // Short descriptions (≤20 chars) are often generic or placeholder text
     if (repoData.description && repoData.description.length > 20) score += 10;
+
+    // License documentation is important for legal clarity - 10 points
+    // Shows understanding of open source licensing and project governance
     if (repoData.hasLicense) score += 10;
 
     return Math.min(100, score);
   }
 
   private calculateProjectStructure(repoData: RepoData): number {
-    let score = 40;
+    let score = 40; // Base score: assumes basic project organization
 
+    // Configuration files show project setup awareness - 10 points
+    // Indicates proper project configuration and environment management
     const hasConfig = repoData.fileStructure.some(
       (f) => f.includes('config') || f.includes('.json') || f.includes('.yml')
     );
     if (hasConfig) score += 10;
 
+    // Source directory organization - 15 points for standard src/lib/app structure
+    // Shows understanding of code organization and separation of concerns
     const hasSrcDir = repoData.fileStructure.some(
       (f) => f === 'src' || f === 'lib' || f === 'app'
     );
     if (hasSrcDir) score += 15;
 
+    // Package management shows dependency awareness - 15 points
+    // Critical for modern development and indicates proper project setup
     const hasPackageManager = repoData.fileStructure.some(
       (f) =>
         f === 'package.json' ||
@@ -190,9 +234,13 @@ export class AnalysisEngine {
     );
     if (hasPackageManager) score += 15;
 
+    // Git ignore file shows version control best practices - 10 points
+    // Indicates awareness of what should and shouldn't be tracked
     const hasGitignore = repoData.fileStructure.some((f) => f === '.gitignore');
     if (hasGitignore) score += 10;
 
+    // Multi-language projects show technical versatility - 10 points for >2 languages
+    // Indicates ability to work with diverse technology stacks
     if (Object.keys(repoData.languages).length > 2) score += 10;
 
     return Math.min(100, score);
