@@ -1,0 +1,234 @@
+{
+  "languages": {
+    "TypeScript": {
+      "demand": "high",
+      "category": "language",
+      "related": ["JavaScript", "React", "Node.js"]
+    },
+    "JavaScript": {
+      "demand": "high",
+      "category": "language",
+      "related": ["React", "Node.js", "Vue"]
+    },
+    "Python": {
+      "demand": "high",
+      "category": "language",
+      "related": ["Django", "FastAPI", "TensorFlow"]
+    },
+    "Java": {
+      "demand": "high",
+      "category": "language",
+      "related": ["Spring", "Maven", "Gradle"]
+    },
+    "Go": {
+      "demand": "high",
+      "category": "language",
+      "related": ["Docker", "Kubernetes", "Microservices"]
+    },
+    "Rust": {
+      "demand": "medium",
+      "category": "language",
+      "related": ["WebAssembly", "Systems Programming"]
+    },
+    "C#": {
+      "demand": "high",
+      "category": "language",
+      "related": [".NET", "Azure", "Unity"]
+    },
+    "PHP": {
+      "demand": "medium",
+      "category": "language",
+      "related": ["Laravel", "Symfony", "WordPress"]
+    },
+    "Ruby": {
+      "demand": "medium",
+      "category": "language",
+      "related": ["Rails", "Sinatra"]
+    },
+    "Swift": {
+      "demand": "medium",
+      "category": "language",
+      "related": ["iOS", "SwiftUI"]
+    },
+    "Kotlin": {
+      "demand": "medium",
+      "category": "language",
+      "related": ["Android", "Spring"]
+    }
+  },
+  "frameworks": {
+    "React": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["TypeScript", "Next.js", "Redux"]
+    },
+    "Next.js": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["React", "Vercel", "SSR"]
+    },
+    "Vue": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["Nuxt", "Vuex", "Pinia"]
+    },
+    "Angular": {
+      "demand": "medium",
+      "category": "framework",
+      "related": ["TypeScript", "RxJS"]
+    },
+    "Django": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["Python", "PostgreSQL", "REST"]
+    },
+    "FastAPI": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["Python", "Async", "OpenAPI"]
+    },
+    "Flask": {
+      "demand": "medium",
+      "category": "framework",
+      "related": ["Python", "REST API"]
+    },
+    "Spring": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["Java", "Microservices"]
+    },
+    "Express": {
+      "demand": "high",
+      "category": "framework",
+      "related": ["Node.js", "REST API"]
+    },
+    "NestJS": {
+      "demand": "medium",
+      "category": "framework",
+      "related": ["TypeScript", "Node.js"]
+    }
+  },
+  "databases": {
+    "PostgreSQL": {
+      "demand": "high",
+      "category": "database",
+      "related": ["SQL", "Database Design"]
+    },
+    "MongoDB": {
+      "demand": "high",
+      "category": "database",
+      "related": ["NoSQL", "Mongoose"]
+    },
+    "MySQL": {
+      "demand": "high",
+      "category": "database",
+      "related": ["SQL", "Database Design"]
+    },
+    "Redis": {
+      "demand": "high",
+      "category": "database",
+      "related": ["Caching", "Session Management"]
+    },
+    "Elasticsearch": {
+      "demand": "medium",
+      "category": "database",
+      "related": ["Search", "Analytics"]
+    },
+    "DynamoDB": {
+      "demand": "medium",
+      "category": "database",
+      "related": ["AWS", "NoSQL"]
+    }
+  },
+  "devops": {
+    "Docker": {
+      "demand": "high",
+      "category": "devops",
+      "related": ["Containerization", "Kubernetes"]
+    },
+    "Kubernetes": {
+      "demand": "high",
+      "category": "devops",
+      "related": ["Docker", "Orchestration"]
+    },
+    "GitHub Actions": {
+      "demand": "high",
+      "category": "devops",
+      "related": ["CI/CD", "Automation"]
+    },
+    "Jenkins": {
+      "demand": "medium",
+      "category": "devops",
+      "related": ["CI/CD", "Automation"]
+    },
+    "Terraform": {
+      "demand": "high",
+      "category": "devops",
+      "related": ["IaC", "Cloud"]
+    },
+    "Ansible": {
+      "demand": "medium",
+      "category": "devops",
+      "related": ["Configuration Management"]
+    }
+  },
+  "cloud": {
+    "AWS": {
+      "demand": "high",
+      "category": "cloud",
+      "related": ["EC2", "S3", "Lambda"]
+    },
+    "Azure": {
+      "demand": "high",
+      "category": "cloud",
+      "related": ["Cloud Computing"]
+    },
+    "GCP": {
+      "demand": "high",
+      "category": "cloud",
+      "related": ["Cloud Computing"]
+    },
+    "Vercel": {
+      "demand": "medium",
+      "category": "cloud",
+      "related": ["Next.js", "Deployment"]
+    },
+    "Netlify": {
+      "demand": "medium",
+      "category": "cloud",
+      "related": ["JAMstack", "Deployment"]
+    }
+  },
+  "tools": {
+    "GraphQL": {
+      "demand": "high",
+      "category": "tool",
+      "related": ["API Design", "Apollo"]
+    },
+    "REST API": {
+      "demand": "high",
+      "category": "tool",
+      "related": ["HTTP", "API Design"]
+    },
+    "Webpack": {
+      "demand": "medium",
+      "category": "tool",
+      "related": ["Build Tools", "Bundling"]
+    },
+    "Vite": {
+      "demand": "high",
+      "category": "tool",
+      "related": ["Build Tools", "React"]
+    },
+    "Jest": {
+      "demand": "high",
+      "category": "tool",
+      "related": ["Testing", "JavaScript"]
+    },
+    "Pytest": {
+      "demand": "high",
+      "category": "tool",
+      "related": ["Testing", "Python"]
+    }
+  }
+}
