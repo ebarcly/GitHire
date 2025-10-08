@@ -18,7 +18,12 @@ export interface RecommendationDetail {
   title: string;
   description: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
-  category: 'code-quality' | 'documentation' | 'structure' | 'collaboration' | 'deployment';
+  category:
+    | 'code-quality'
+    | 'documentation'
+    | 'structure'
+    | 'collaboration'
+    | 'deployment';
   estimatedEffort: 'low' | 'medium' | 'high';
   scoreImpact: number;
   actionSteps: string[];
@@ -68,86 +73,59 @@ interface RepoData {
   lastUpdated: string;
 }
 
+import technologiesData from '../data/technologies.json';
+
+interface TechnologyInfo {
+  demand: 'high' | 'medium' | 'low';
+  category: 'language' | 'framework' | 'database' | 'devops' | 'cloud' | 'tool';
+  related: string[];
+}
+
+interface TechnologiesDatabase {
+  languages: Record<string, TechnologyInfo>;
+  frameworks: Record<string, TechnologyInfo>;
+  databases: Record<string, TechnologyInfo>;
+  devops: Record<string, TechnologyInfo>;
+  cloud: Record<string, TechnologyInfo>;
+  tools: Record<string, TechnologyInfo>;
+}
+
 export class AnalysisEngine {
-  private readonly techDatabase = {
-    languages: {
-      'TypeScript': { demand: 'high', category: 'language', related: ['JavaScript', 'React', 'Node.js'] },
-      'JavaScript': { demand: 'high', category: 'language', related: ['React', 'Node.js', 'Vue'] },
-      'Python': { demand: 'high', category: 'language', related: ['Django', 'FastAPI', 'TensorFlow'] },
-      'Java': { demand: 'high', category: 'language', related: ['Spring', 'Maven', 'Gradle'] },
-      'Go': { demand: 'high', category: 'language', related: ['Docker', 'Kubernetes', 'Microservices'] },
-      'Rust': { demand: 'medium', category: 'language', related: ['WebAssembly', 'Systems Programming'] },
-      'C#': { demand: 'high', category: 'language', related: ['.NET', 'Azure', 'Unity'] },
-      'PHP': { demand: 'medium', category: 'language', related: ['Laravel', 'Symfony', 'WordPress'] },
-      'Ruby': { demand: 'medium', category: 'language', related: ['Rails', 'Sinatra'] },
-      'Swift': { demand: 'medium', category: 'language', related: ['iOS', 'SwiftUI'] },
-      'Kotlin': { demand: 'medium', category: 'language', related: ['Android', 'Spring'] },
-    },
-    frameworks: {
-      'React': { demand: 'high', category: 'framework', related: ['TypeScript', 'Next.js', 'Redux'] },
-      'Next.js': { demand: 'high', category: 'framework', related: ['React', 'Vercel', 'SSR'] },
-      'Vue': { demand: 'high', category: 'framework', related: ['Nuxt', 'Vuex', 'Pinia'] },
-      'Angular': { demand: 'medium', category: 'framework', related: ['TypeScript', 'RxJS'] },
-      'Django': { demand: 'high', category: 'framework', related: ['Python', 'PostgreSQL', 'REST'] },
-      'FastAPI': { demand: 'high', category: 'framework', related: ['Python', 'Async', 'OpenAPI'] },
-      'Flask': { demand: 'medium', category: 'framework', related: ['Python', 'REST API'] },
-      'Spring': { demand: 'high', category: 'framework', related: ['Java', 'Microservices'] },
-      'Express': { demand: 'high', category: 'framework', related: ['Node.js', 'REST API'] },
-      'NestJS': { demand: 'medium', category: 'framework', related: ['TypeScript', 'Node.js'] },
-    },
-    databases: {
-      'PostgreSQL': { demand: 'high', category: 'database', related: ['SQL', 'Database Design'] },
-      'MongoDB': { demand: 'high', category: 'database', related: ['NoSQL', 'Mongoose'] },
-      'MySQL': { demand: 'high', category: 'database', related: ['SQL', 'Database Design'] },
-      'Redis': { demand: 'high', category: 'database', related: ['Caching', 'Session Management'] },
-      'Elasticsearch': { demand: 'medium', category: 'database', related: ['Search', 'Analytics'] },
-      'DynamoDB': { demand: 'medium', category: 'database', related: ['AWS', 'NoSQL'] },
-    },
-    devops: {
-      'Docker': { demand: 'high', category: 'devops', related: ['Containerization', 'Kubernetes'] },
-      'Kubernetes': { demand: 'high', category: 'devops', related: ['Docker', 'Orchestration'] },
-      'GitHub Actions': { demand: 'high', category: 'devops', related: ['CI/CD', 'Automation'] },
-      'Jenkins': { demand: 'medium', category: 'devops', related: ['CI/CD', 'Automation'] },
-      'Terraform': { demand: 'high', category: 'devops', related: ['IaC', 'Cloud'] },
-      'Ansible': { demand: 'medium', category: 'devops', related: ['Configuration Management'] },
-    },
-    cloud: {
-      'AWS': { demand: 'high', category: 'cloud', related: ['EC2', 'S3', 'Lambda'] },
-      'Azure': { demand: 'high', category: 'cloud', related: ['Cloud Computing'] },
-      'GCP': { demand: 'high', category: 'cloud', related: ['Cloud Computing'] },
-      'Vercel': { demand: 'medium', category: 'cloud', related: ['Next.js', 'Deployment'] },
-      'Netlify': { demand: 'medium', category: 'cloud', related: ['JAMstack', 'Deployment'] },
-    },
-    tools: {
-      'GraphQL': { demand: 'high', category: 'tool', related: ['API Design', 'Apollo'] },
-      'REST API': { demand: 'high', category: 'tool', related: ['HTTP', 'API Design'] },
-      'Webpack': { demand: 'medium', category: 'tool', related: ['Build Tools', 'Bundling'] },
-      'Vite': { demand: 'high', category: 'tool', related: ['Build Tools', 'React'] },
-      'Jest': { demand: 'high', category: 'tool', related: ['Testing', 'JavaScript'] },
-      'Pytest': { demand: 'high', category: 'tool', related: ['Testing', 'Python'] },
-    }
-  };
+  private readonly techDatabase: TechnologiesDatabase =
+    technologiesData as TechnologiesDatabase;
 
   analyze(repoData: RepoData): AnalysisResult {
     const codeQuality = this.calculateCodeQuality(repoData);
     const documentation = this.calculateDocumentation(repoData);
     const projectStructure = this.calculateProjectStructure(repoData);
-    
+
     const overallScore = Math.round(
-      (codeQuality * 0.4) + (documentation * 0.3) + (projectStructure * 0.3)
+      codeQuality * 0.4 + documentation * 0.3 + projectStructure * 0.3
     );
 
     const technologies = this.extractTechnologiesDetailed(repoData);
     const skillGaps = this.identifySkillGapsDetailed(repoData, technologies);
-    const recommendations = this.generateDetailedRecommendations(repoData, codeQuality, documentation, projectStructure, technologies, skillGaps);
-    const insights = this.generateInsights(repoData, overallScore, technologies, skillGaps);
+    const recommendations = this.generateDetailedRecommendations(
+      repoData,
+      codeQuality,
+      documentation,
+      projectStructure,
+      technologies,
+      skillGaps
+    );
+    const insights = this.generateInsights(
+      repoData,
+      overallScore,
+      technologies,
+      skillGaps
+    );
 
     return {
       score: overallScore,
       metrics: {
         codeQuality,
         documentation,
-        projectStructure
+        projectStructure,
       },
       technologies,
       skillGaps,
@@ -157,9 +135,9 @@ export class AnalysisEngine {
         description: repoData.description,
         stars: repoData.stars,
         forks: repoData.forks,
-        lastUpdated: repoData.lastUpdated
+        lastUpdated: repoData.lastUpdated,
       },
-      insights
+      insights,
     };
   }
 
@@ -192,23 +170,27 @@ export class AnalysisEngine {
   private calculateProjectStructure(repoData: RepoData): number {
     let score = 40;
 
-    const hasConfig = repoData.fileStructure.some(f => 
-      f.includes('config') || f.includes('.json') || f.includes('.yml')
+    const hasConfig = repoData.fileStructure.some(
+      (f) => f.includes('config') || f.includes('.json') || f.includes('.yml')
     );
     if (hasConfig) score += 10;
 
-    const hasSrcDir = repoData.fileStructure.some(f => 
-      f === 'src' || f === 'lib' || f === 'app'
+    const hasSrcDir = repoData.fileStructure.some(
+      (f) => f === 'src' || f === 'lib' || f === 'app'
     );
     if (hasSrcDir) score += 15;
 
-    const hasPackageManager = repoData.fileStructure.some(f => 
-      f === 'package.json' || f === 'requirements.txt' || 
-      f === 'go.mod' || f === 'cargo.toml' || f === 'pom.xml'
+    const hasPackageManager = repoData.fileStructure.some(
+      (f) =>
+        f === 'package.json' ||
+        f === 'requirements.txt' ||
+        f === 'go.mod' ||
+        f === 'cargo.toml' ||
+        f === 'pom.xml'
     );
     if (hasPackageManager) score += 15;
 
-    const hasGitignore = repoData.fileStructure.some(f => f === '.gitignore');
+    const hasGitignore = repoData.fileStructure.some((f) => f === '.gitignore');
     if (hasGitignore) score += 10;
 
     if (Object.keys(repoData.languages).length > 2) score += 10;
@@ -219,7 +201,14 @@ export class AnalysisEngine {
   private extractTechnologiesDetailed(repoData: RepoData): TechnologyDetail[] {
     const technologies: TechnologyDetail[] = [];
     const fileNames = repoData.fileStructure.join(' ').toLowerCase();
-    const allTechDb = { ...this.techDatabase.languages, ...this.techDatabase.frameworks, ...this.techDatabase.databases, ...this.techDatabase.devops, ...this.techDatabase.cloud, ...this.techDatabase.tools };
+    const allTechDb = {
+      ...this.techDatabase.languages,
+      ...this.techDatabase.frameworks,
+      ...this.techDatabase.databases,
+      ...this.techDatabase.devops,
+      ...this.techDatabase.cloud,
+      ...this.techDatabase.tools,
+    };
 
     // Primary language
     if (repoData.language && allTechDb[repoData.language]) {
@@ -229,29 +218,39 @@ export class AnalysisEngine {
         category: tech.category as any,
         proficiency: 'detected',
         marketDemand: tech.demand as any,
-        relatedSkills: tech.related
+        relatedSkills: tech.related,
       });
     }
 
     // Other languages from GitHub API
-    Object.keys(repoData.languages).forEach(lang => {
-      if (allTechDb[lang] && !technologies.find(t => t.name === lang)) {
+    Object.keys(repoData.languages).forEach((lang) => {
+      if (allTechDb[lang] && !technologies.find((t) => t.name === lang)) {
         const tech = allTechDb[lang];
         technologies.push({
           name: lang,
           category: tech.category as any,
           proficiency: 'detected',
           marketDemand: tech.demand as any,
-          relatedSkills: tech.related
+          relatedSkills: tech.related,
         });
       }
     });
 
     // Detect frameworks and tools from package.json
     if (fileNames.includes('package.json')) {
-      const jsFrameworks = ['React', 'Next.js', 'Vue', 'Angular', 'Express', 'NestJS'];
-      jsFrameworks.forEach(fw => {
-        if (fileNames.includes(fw.toLowerCase()) && !technologies.find(t => t.name === fw)) {
+      const jsFrameworks = [
+        'React',
+        'Next.js',
+        'Vue',
+        'Angular',
+        'Express',
+        'NestJS',
+      ];
+      jsFrameworks.forEach((fw) => {
+        if (
+          fileNames.includes(fw.toLowerCase()) &&
+          !technologies.find((t) => t.name === fw)
+        ) {
           const tech = allTechDb[fw];
           if (tech) {
             technologies.push({
@@ -259,29 +258,35 @@ export class AnalysisEngine {
               category: tech.category as any,
               proficiency: 'inferred',
               marketDemand: tech.demand as any,
-              relatedSkills: tech.related
+              relatedSkills: tech.related,
             });
           }
         }
       });
-      
+
       // Always add Node.js if package.json exists
-      if (!technologies.find(t => t.name === 'Node.js')) {
+      if (!technologies.find((t) => t.name === 'Node.js')) {
         technologies.push({
           name: 'Node.js',
           category: 'framework',
           proficiency: 'inferred',
           marketDemand: 'high',
-          relatedSkills: ['JavaScript', 'Express', 'npm']
+          relatedSkills: ['JavaScript', 'Express', 'npm'],
         });
       }
     }
 
     // Python frameworks
-    if (fileNames.includes('requirements.txt') || fileNames.includes('pipfile')) {
+    if (
+      fileNames.includes('requirements.txt') ||
+      fileNames.includes('pipfile')
+    ) {
       const pyFrameworks = ['Django', 'FastAPI', 'Flask'];
-      pyFrameworks.forEach(fw => {
-        if (fileNames.includes(fw.toLowerCase()) && !technologies.find(t => t.name === fw)) {
+      pyFrameworks.forEach((fw) => {
+        if (
+          fileNames.includes(fw.toLowerCase()) &&
+          !technologies.find((t) => t.name === fw)
+        ) {
           const tech = allTechDb[fw];
           if (tech) {
             technologies.push({
@@ -289,7 +294,7 @@ export class AnalysisEngine {
               category: tech.category as any,
               proficiency: 'inferred',
               marketDemand: tech.demand as any,
-              relatedSkills: tech.related
+              relatedSkills: tech.related,
             });
           }
         }
@@ -303,7 +308,7 @@ export class AnalysisEngine {
         category: 'devops',
         proficiency: 'detected',
         marketDemand: 'high',
-        relatedSkills: ['Containerization', 'Kubernetes']
+        relatedSkills: ['Containerization', 'Kubernetes'],
       });
     }
 
@@ -313,7 +318,7 @@ export class AnalysisEngine {
         category: 'devops',
         proficiency: 'detected',
         marketDemand: 'high',
-        relatedSkills: ['Docker', 'Orchestration', 'Cloud']
+        relatedSkills: ['Docker', 'Orchestration', 'Cloud'],
       });
     }
 
@@ -325,7 +330,7 @@ export class AnalysisEngine {
           category: 'devops',
           proficiency: 'detected',
           marketDemand: 'high',
-          relatedSkills: ['CI/CD', 'Automation', 'YAML']
+          relatedSkills: ['CI/CD', 'Automation', 'YAML'],
         });
       }
     }
@@ -338,32 +343,35 @@ export class AnalysisEngine {
           category: 'tool',
           proficiency: 'inferred',
           marketDemand: 'high',
-          relatedSkills: ['Testing', 'JavaScript', 'TDD']
+          relatedSkills: ['Testing', 'JavaScript', 'TDD'],
         });
       }
-      if (fileNames.includes('pytest') || fileNames.includes('requirements.txt')) {
+      if (
+        fileNames.includes('pytest') ||
+        fileNames.includes('requirements.txt')
+      ) {
         technologies.push({
           name: 'Pytest',
           category: 'tool',
           proficiency: 'inferred',
           marketDemand: 'high',
-          relatedSkills: ['Testing', 'Python', 'TDD']
+          relatedSkills: ['Testing', 'Python', 'TDD'],
         });
       }
     }
 
     // Databases
     const databases = ['PostgreSQL', 'MongoDB', 'MySQL', 'Redis'];
-    databases.forEach(db => {
+    databases.forEach((db) => {
       if (fileNames.includes(db.toLowerCase())) {
         const tech = allTechDb[db];
-        if (tech && !technologies.find(t => t.name === db)) {
+        if (tech && !technologies.find((t) => t.name === db)) {
           technologies.push({
             name: db,
             category: 'database',
             proficiency: 'inferred',
             marketDemand: tech.demand as any,
-            relatedSkills: tech.related
+            relatedSkills: tech.related,
           });
         }
       }
@@ -372,18 +380,26 @@ export class AnalysisEngine {
     return technologies.slice(0, 15);
   }
 
-  private identifySkillGapsDetailed(repoData: RepoData, technologies: TechnologyDetail[]): SkillGapDetail[] {
+  private identifySkillGapsDetailed(
+    repoData: RepoData,
+    technologies: TechnologyDetail[]
+  ): SkillGapDetail[] {
     const gaps: SkillGapDetail[] = [];
-    const techNames = technologies.map(t => t.name);
+    const techNames = technologies.map((t) => t.name);
 
     // Critical gaps
     if (!repoData.hasTests) {
       gaps.push({
         skill: 'Automated Testing',
         priority: 'critical',
-        reason: 'Testing is essential for code quality and is expected by 95% of employers',
-        learningResources: ['Jest Documentation', 'Testing Library', 'Test-Driven Development'],
-        estimatedImpact: 15
+        reason:
+          'Testing is essential for code quality and is expected by 95% of employers',
+        learningResources: [
+          'Jest Documentation',
+          'Testing Library',
+          'Test-Driven Development',
+        ],
+        estimatedImpact: 15,
       });
     }
 
@@ -391,9 +407,10 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'CI/CD Pipeline',
         priority: 'critical',
-        reason: 'Continuous Integration is a standard practice in modern development teams',
+        reason:
+          'Continuous Integration is a standard practice in modern development teams',
         learningResources: ['GitHub Actions', 'GitLab CI', 'Jenkins'],
-        estimatedImpact: 15
+        estimatedImpact: 15,
       });
     }
 
@@ -402,9 +419,14 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'Docker & Containerization',
         priority: 'high',
-        reason: 'Containerization is used by 80% of companies for deployment and development',
-        learningResources: ['Docker Documentation', 'Docker Compose', 'Container Best Practices'],
-        estimatedImpact: 10
+        reason:
+          'Containerization is used by 80% of companies for deployment and development',
+        learningResources: [
+          'Docker Documentation',
+          'Docker Compose',
+          'Container Best Practices',
+        ],
+        estimatedImpact: 10,
       });
     }
 
@@ -412,9 +434,14 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'TypeScript',
         priority: 'high',
-        reason: 'TypeScript is increasingly preferred over JavaScript for large-scale applications',
-        learningResources: ['TypeScript Handbook', 'Type Safety', 'Advanced Types'],
-        estimatedImpact: 10
+        reason:
+          'TypeScript is increasingly preferred over JavaScript for large-scale applications',
+        learningResources: [
+          'TypeScript Handbook',
+          'Type Safety',
+          'Advanced Types',
+        ],
+        estimatedImpact: 10,
       });
     }
 
@@ -422,21 +449,26 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'Technical Documentation',
         priority: 'high',
-        reason: 'Good documentation demonstrates communication skills and project maturity',
-        learningResources: ['Documentation Best Practices', 'API Documentation', 'README Templates'],
-        estimatedImpact: 10
+        reason:
+          'Good documentation demonstrates communication skills and project maturity',
+        learningResources: [
+          'Documentation Best Practices',
+          'API Documentation',
+          'README Templates',
+        ],
+        estimatedImpact: 10,
       });
     }
 
     // Medium priority gaps
-    const hasDatabase = technologies.some(t => t.category === 'database');
+    const hasDatabase = technologies.some((t) => t.category === 'database');
     if (!hasDatabase) {
       gaps.push({
         skill: 'Database Management',
         priority: 'medium',
         reason: 'Most applications require database knowledge (SQL or NoSQL)',
         learningResources: ['PostgreSQL', 'MongoDB', 'Database Design'],
-        estimatedImpact: 10
+        estimatedImpact: 10,
       });
     }
 
@@ -446,18 +478,22 @@ export class AnalysisEngine {
         priority: 'medium',
         reason: 'Container orchestration is valuable for scalable applications',
         learningResources: ['Kubernetes Basics', 'K8s Deployment', 'Helm'],
-        estimatedImpact: 5
+        estimatedImpact: 5,
       });
     }
 
-    const hasCloudTech = technologies.some(t => t.category === 'cloud');
+    const hasCloudTech = technologies.some((t) => t.category === 'cloud');
     if (!hasCloudTech) {
       gaps.push({
         skill: 'Cloud Platform (AWS/Azure/GCP)',
         priority: 'medium',
         reason: 'Cloud experience is required by most modern tech companies',
-        learningResources: ['AWS Fundamentals', 'Azure Basics', 'Cloud Architecture'],
-        estimatedImpact: 10
+        learningResources: [
+          'AWS Fundamentals',
+          'Azure Basics',
+          'Cloud Architecture',
+        ],
+        estimatedImpact: 10,
       });
     }
 
@@ -466,9 +502,14 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'Git Best Practices',
         priority: 'low',
-        reason: 'Consistent commit history shows professional development habits',
-        learningResources: ['Git Workflow', 'Commit Messages', 'Branching Strategies'],
-        estimatedImpact: 5
+        reason:
+          'Consistent commit history shows professional development habits',
+        learningResources: [
+          'Git Workflow',
+          'Commit Messages',
+          'Branching Strategies',
+        ],
+        estimatedImpact: 5,
       });
     }
 
@@ -476,9 +517,10 @@ export class AnalysisEngine {
       gaps.push({
         skill: 'Open Source Licensing',
         priority: 'low',
-        reason: 'Understanding licenses is important for professional open source work',
+        reason:
+          'Understanding licenses is important for professional open source work',
         learningResources: ['MIT License', 'Apache 2.0', 'License Selection'],
-        estimatedImpact: 3
+        estimatedImpact: 3,
       });
     }
 
@@ -499,7 +541,8 @@ export class AnalysisEngine {
     if (!repoData.hasTests) {
       recommendations.push({
         title: 'Implement Comprehensive Testing Suite',
-        description: 'Add unit tests, integration tests, and achieve at least 70% code coverage',
+        description:
+          'Add unit tests, integration tests, and achieve at least 70% code coverage',
         priority: 'critical',
         category: 'code-quality',
         estimatedEffort: 'high',
@@ -509,15 +552,16 @@ export class AnalysisEngine {
           'Write unit tests for core functions and components',
           'Add integration tests for critical user flows',
           'Set up code coverage reporting',
-          'Aim for 70%+ coverage before considering complete'
-        ]
+          'Aim for 70%+ coverage before considering complete',
+        ],
       });
     }
 
     if (!repoData.hasCi) {
       recommendations.push({
         title: 'Set Up CI/CD Pipeline',
-        description: 'Automate testing, linting, and deployment with GitHub Actions or similar',
+        description:
+          'Automate testing, linting, and deployment with GitHub Actions or similar',
         priority: 'critical',
         category: 'deployment',
         estimatedEffort: 'medium',
@@ -527,8 +571,8 @@ export class AnalysisEngine {
           'Configure automated testing on pull requests',
           'Add linting and code quality checks',
           'Set up automated deployment to staging',
-          'Add status badges to README'
-        ]
+          'Add status badges to README',
+        ],
       });
     }
 
@@ -536,7 +580,8 @@ export class AnalysisEngine {
     if (!repoData.hasReadme) {
       recommendations.push({
         title: 'Create Comprehensive README',
-        description: 'Write a professional README with setup instructions, features, and examples',
+        description:
+          'Write a professional README with setup instructions, features, and examples',
         priority: 'high',
         category: 'documentation',
         estimatedEffort: 'low',
@@ -546,13 +591,14 @@ export class AnalysisEngine {
           'Include installation and setup instructions',
           'Document key features with examples',
           'Add screenshots or demo GIFs',
-          'Include contribution guidelines and license'
-        ]
+          'Include contribution guidelines and license',
+        ],
       });
     } else if (documentation < 70) {
       recommendations.push({
         title: 'Enhance Documentation',
-        description: 'Add API documentation, architecture diagrams, and contribution guidelines',
+        description:
+          'Add API documentation, architecture diagrams, and contribution guidelines',
         priority: 'high',
         category: 'documentation',
         estimatedEffort: 'medium',
@@ -562,15 +608,16 @@ export class AnalysisEngine {
           'Add API reference documentation',
           'Include architecture diagrams',
           'Write CONTRIBUTING.md for contributors',
-          'Add code examples and tutorials'
-        ]
+          'Add code examples and tutorials',
+        ],
       });
     }
 
     if (projectStructure < 70) {
       recommendations.push({
         title: 'Improve Project Structure',
-        description: 'Organize code with clear separation of concerns and standard conventions',
+        description:
+          'Organize code with clear separation of concerns and standard conventions',
         priority: 'high',
         category: 'structure',
         estimatedEffort: 'medium',
@@ -580,8 +627,8 @@ export class AnalysisEngine {
           'Separate tests into tests/ or __tests__/',
           'Add config/ for configuration files',
           'Create docs/ for documentation',
-          'Follow framework-specific best practices'
-        ]
+          'Follow framework-specific best practices',
+        ],
       });
     }
 
@@ -589,7 +636,8 @@ export class AnalysisEngine {
     if (repoData.commits < 50) {
       recommendations.push({
         title: 'Increase Development Activity',
-        description: 'Make regular, meaningful commits to show active development',
+        description:
+          'Make regular, meaningful commits to show active development',
         priority: 'medium',
         category: 'collaboration',
         estimatedEffort: 'low',
@@ -599,15 +647,16 @@ export class AnalysisEngine {
           'Write clear, descriptive commit messages',
           'Follow conventional commit format',
           'Break large changes into smaller commits',
-          'Show consistent development over time'
-        ]
+          'Show consistent development over time',
+        ],
       });
     }
 
     if (!repoData.hasLicense) {
       recommendations.push({
         title: 'Add Open Source License',
-        description: 'Choose and add an appropriate license (MIT, Apache 2.0, GPL)',
+        description:
+          'Choose and add an appropriate license (MIT, Apache 2.0, GPL)',
         priority: 'medium',
         category: 'documentation',
         estimatedEffort: 'low',
@@ -616,15 +665,16 @@ export class AnalysisEngine {
           'Choose appropriate license for your project',
           'Add LICENSE file to repository root',
           'Include license badge in README',
-          'Update package.json or setup.py with license info'
-        ]
+          'Update package.json or setup.py with license info',
+        ],
       });
     }
 
     if (repoData.contributors === 1) {
       recommendations.push({
         title: 'Encourage Community Contributions',
-        description: 'Make your project contribution-friendly to attract collaborators',
+        description:
+          'Make your project contribution-friendly to attract collaborators',
         priority: 'medium',
         category: 'collaboration',
         estimatedEffort: 'low',
@@ -634,15 +684,16 @@ export class AnalysisEngine {
           'Create issue templates for bugs and features',
           'Label issues as "good first issue" for newcomers',
           'Respond promptly to issues and pull requests',
-          'Add CODE_OF_CONDUCT.md'
-        ]
+          'Add CODE_OF_CONDUCT.md',
+        ],
       });
     }
 
     if (repoData.stars < 10) {
       recommendations.push({
         title: 'Increase Project Visibility',
-        description: 'Promote your project to gain recognition and demonstrate impact',
+        description:
+          'Promote your project to gain recognition and demonstrate impact',
         priority: 'low',
         category: 'collaboration',
         estimatedEffort: 'medium',
@@ -652,13 +703,13 @@ export class AnalysisEngine {
           'Write a blog post about your project',
           'Submit to awesome lists and directories',
           'Present at local meetups or conferences',
-          'Create demo videos or tutorials'
-        ]
+          'Create demo videos or tutorials',
+        ],
       });
     }
 
     // Technology-specific recommendations
-    const hasDocker = technologies.some(t => t.name === 'Docker');
+    const hasDocker = technologies.some((t) => t.name === 'Docker');
     if (!hasDocker && technologies.length > 0) {
       recommendations.push({
         title: 'Add Docker Support',
@@ -672,8 +723,8 @@ export class AnalysisEngine {
           'Add docker-compose.yml for multi-service setup',
           'Document Docker usage in README',
           'Test container builds in CI pipeline',
-          'Consider multi-stage builds for optimization'
-        ]
+          'Consider multi-stage builds for optimization',
+        ],
       });
     }
 
@@ -695,46 +746,85 @@ export class AnalysisEngine {
     const weaknesses: string[] = [];
 
     // Identify strengths
-    if (repoData.hasTests) strengths.push('Strong testing practices demonstrate code quality focus');
-    if (repoData.hasCi) strengths.push('CI/CD implementation shows DevOps awareness');
-    if (repoData.commits > 100) strengths.push('Consistent development activity indicates dedication');
-    if (repoData.contributors > 5) strengths.push('Collaborative project shows teamwork skills');
-    if (repoData.hasDocumentation) strengths.push('Comprehensive documentation demonstrates professionalism');
-    if (technologies.length > 5) strengths.push('Diverse technology stack shows versatility');
-    
-    const highDemandTech = technologies.filter(t => t.marketDemand === 'high');
+    if (repoData.hasTests)
+      strengths.push('Strong testing practices demonstrate code quality focus');
+    if (repoData.hasCi)
+      strengths.push('CI/CD implementation shows DevOps awareness');
+    if (repoData.commits > 100)
+      strengths.push('Consistent development activity indicates dedication');
+    if (repoData.contributors > 5)
+      strengths.push('Collaborative project shows teamwork skills');
+    if (repoData.hasDocumentation)
+      strengths.push(
+        'Comprehensive documentation demonstrates professionalism'
+      );
+    if (technologies.length > 5)
+      strengths.push('Diverse technology stack shows versatility');
+
+    const highDemandTech = technologies.filter(
+      (t) => t.marketDemand === 'high'
+    );
     if (highDemandTech.length > 3) {
-      strengths.push(`Strong alignment with in-demand technologies (${highDemandTech.map(t => t.name).join(', ')})`);
+      strengths.push(
+        `Strong alignment with in-demand technologies (${highDemandTech
+          .map((t) => t.name)
+          .join(', ')})`
+      );
     }
 
     // Identify weaknesses
-    if (!repoData.hasTests) weaknesses.push('Lack of testing may raise concerns about code reliability');
-    if (!repoData.hasCi) weaknesses.push('Missing CI/CD suggests limited DevOps experience');
-    if (repoData.commits < 20) weaknesses.push('Low commit count may indicate limited project scope');
-    if (!repoData.hasDocumentation) weaknesses.push('Insufficient documentation could hinder collaboration');
-    if (technologies.length < 3) weaknesses.push('Limited technology diversity may restrict job opportunities');
-    
-    const criticalGaps = skillGaps.filter(g => g.priority === 'critical');
+    if (!repoData.hasTests)
+      weaknesses.push(
+        'Lack of testing may raise concerns about code reliability'
+      );
+    if (!repoData.hasCi)
+      weaknesses.push('Missing CI/CD suggests limited DevOps experience');
+    if (repoData.commits < 20)
+      weaknesses.push('Low commit count may indicate limited project scope');
+    if (!repoData.hasDocumentation)
+      weaknesses.push('Insufficient documentation could hinder collaboration');
+    if (technologies.length < 3)
+      weaknesses.push(
+        'Limited technology diversity may restrict job opportunities'
+      );
+
+    const criticalGaps = skillGaps.filter((g) => g.priority === 'critical');
     if (criticalGaps.length > 0) {
-      weaknesses.push(`Critical skill gaps: ${criticalGaps.map(g => g.skill).join(', ')}`);
+      weaknesses.push(
+        `Critical skill gaps: ${criticalGaps.map((g) => g.skill).join(', ')}`
+      );
     }
 
     // Market alignment
     let marketAlignment = '';
-    const highDemandCount = technologies.filter(t => t.marketDemand === 'high').length;
+    const highDemandCount = technologies.filter(
+      (t) => t.marketDemand === 'high'
+    ).length;
     if (highDemandCount >= 4) {
-      marketAlignment = 'Excellent - Your tech stack strongly aligns with current market demands';
+      marketAlignment =
+        'Excellent - Your tech stack strongly aligns with current market demands';
     } else if (highDemandCount >= 2) {
-      marketAlignment = 'Good - Your skills match many employer requirements, with room for growth';
+      marketAlignment =
+        'Good - Your skills match many employer requirements, with room for growth';
     } else {
-      marketAlignment = 'Developing - Consider adding more in-demand technologies to your portfolio';
+      marketAlignment =
+        'Developing - Consider adding more in-demand technologies to your portfolio';
     }
 
     // Career level assessment
     let careerLevel: 'junior' | 'mid' | 'senior' = 'junior';
-    if (score >= 80 && repoData.hasTests && repoData.hasCi && technologies.length >= 5) {
+    if (
+      score >= 80 &&
+      repoData.hasTests &&
+      repoData.hasCi &&
+      technologies.length >= 5
+    ) {
       careerLevel = 'senior';
-    } else if (score >= 65 && (repoData.hasTests || repoData.hasCi) && technologies.length >= 3) {
+    } else if (
+      score >= 65 &&
+      (repoData.hasTests || repoData.hasCi) &&
+      technologies.length >= 3
+    ) {
       careerLevel = 'mid';
     }
 
@@ -742,7 +832,7 @@ export class AnalysisEngine {
       strengths: strengths.slice(0, 5),
       weaknesses: weaknesses.slice(0, 5),
       marketAlignment,
-      careerLevel
+      careerLevel,
     };
   }
 }
