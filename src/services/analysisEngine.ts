@@ -148,7 +148,7 @@ export class AnalysisEngine {
   private calculateCodeQuality(repoData: RepoData): number {
     let score = 40; // Base score: assumes average code quality without additional evidence
 
-    // Testing is critical for code quality - 20 points for having any tests
+    // Testing is critical for code quality - 15 points for having any tests
     // This is the highest single factor as testing directly impacts code reliability
     if (repoData.hasTests) score += 15;
 
@@ -164,9 +164,9 @@ export class AnalysisEngine {
     // Shows sustained development effort and project evolution
     if (repoData.commits > 50) score += 5;
 
-    // Very active development - additional 5 points for 100+ commits
+    // Very active development - additional 5 points for 150+ commits
     // Indicates significant project scope and developer dedication
-    if (repoData.commits > 100) score += 5;
+    if (repoData.commits > 150) score += 5;
 
     // Collaborative development - 5 points for multiple contributors
     // Shows ability to work in teams and code review practices
@@ -176,27 +176,27 @@ export class AnalysisEngine {
     // Indicates mature project with community involvement
     if (repoData.contributors > 5) score += 5;
 
-    // Low issue count indicates good maintenance - 5 points for <10 open issues
+    // Low issue count indicates good maintenance - 5 points for <15 open issues
     // Shows active bug fixing and project health
-    if (repoData.openIssues < 10) score += 5;
+    if (repoData.openIssues < 15) score += 5;
 
     return Math.min(100, score);
   }
 
   private calculateDocumentation(repoData: RepoData): number {
-    let score = 30; // Base score: minimal documentation expected for any project
+    let score = 20; // Base score: minimal documentation expected for any project
 
-    // README is essential for project understanding - 30 points
+    // README is essential for project understanding - 35 points
     // This is the highest factor as README is the first thing users see
-    if (repoData.hasReadme) score += 30;
+    if (repoData.hasReadme) score += 45;
 
     // Additional documentation shows thoroughness - 20 points
     // Indicates comprehensive project documentation beyond basic README
     if (repoData.hasDocumentation) score += 20;
 
-    // Meaningful description shows project clarity - 10 points for >20 chars
+    // Meaningful description shows project clarity - 5 points for >20 chars
     // Short descriptions (≤20 chars) are often generic or placeholder text
-    if (repoData.description && repoData.description.length > 20) score += 10;
+    if (repoData.description && repoData.description.length > 20) score += 5;
 
     // License documentation is important for legal clarity - 10 points
     // Shows understanding of open source licensing and project governance
@@ -206,14 +206,14 @@ export class AnalysisEngine {
   }
 
   private calculateProjectStructure(repoData: RepoData): number {
-    let score = 40; // Base score: assumes basic project organization
+    let score = 30; // Base score: assumes basic project organization
 
     // Configuration files show project setup awareness - 10 points
     // Indicates proper project configuration and environment management
     const hasConfig = repoData.fileStructure.some(
       (f) => f.includes('config') || f.includes('.json') || f.includes('.yml')
     );
-    if (hasConfig) score += 10;
+    if (hasConfig) score += 15;
 
     // Source directory organization - 15 points for standard src/lib/app structure
     // Shows understanding of code organization and separation of concerns
@@ -222,7 +222,7 @@ export class AnalysisEngine {
     );
     if (hasSrcDir) score += 15;
 
-    // Package management shows dependency awareness - 15 points
+    // Package management shows dependency awareness - 20 points
     // Critical for modern development and indicates proper project setup
     const hasPackageManager = repoData.fileStructure.some(
       (f) =>
@@ -232,7 +232,7 @@ export class AnalysisEngine {
         f === 'cargo.toml' ||
         f === 'pom.xml'
     );
-    if (hasPackageManager) score += 15;
+    if (hasPackageManager) score += 20;
 
     // Git ignore file shows version control best practices - 10 points
     // Indicates awareness of what should and shouldn't be tracked
