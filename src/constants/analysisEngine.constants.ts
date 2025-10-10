@@ -1,27 +1,34 @@
-export const CODE_QUALITY_BASE_SCORE = 40;
-export const DOCUMENTATION_BASE_SCORE = 20;
-export const PROJECT_STRUCTURE_BASE_SCORE = 30;
+export const SCORES = {
+  CODE_QUALITY: {
+    BASE: 40,
+    TESTS: 15,
+    CI: 15,
+    LICENSE: 5,
+    COMMIT: 5,
+    VERY_ACTIVE_COMMIT: 5,
+    CONTRIBUTORS: 5,
+    STRONG_COLLABORATION: 5,
+    LOW_ISSUE_COUNT: 5,
+  },
+  DOCUMENTATION: {
+    BASE: 20,
+    README: 45,
+    ADDITIONAL_DOC: 20,
+    MEANINGFUL_DESCRIPTION: 5,
+    LICENSE_DOC: 10,
+  },
+  PROJECT_STRUCTURE: {
+    BASE: 30,
+    CONFIG: 15,
+    SRC_DIR: 15,
+    PACKAGE_MANAGER: 20,
+    GITIGNORE: 10,
+    MULTI_LANG: 10,
+  },
+};
 
-export const TESTS_SCORE = 15;
-export const CI_SCORE = 15;
-export const LICENSE_SCORE = 5;
-export const COMMIT_SCORE = 5;
-export const VERY_ACTIVE_COMMIT_SCORE = 5;
-export const CONTRIBUTORS_SCORE = 5;
-export const STRONG_COLLABORATION_SCORE = 5;
-export const LOW_ISSUE_COUNT_SCORE = 5;
-
-export const README_SCORE = 45;
-export const ADDITIONAL_DOC_SCORE = 20;
-export const MEANINGFUL_DESCRIPTION_SCORE = 5;
-export const LICENSE_DOC_SCORE = 10;
-
-export const CONFIG_SCORE = 15;
-export const SRC_DIR_SCORE = 15;
-export const PACKAGE_MANAGER_SCORE = 20;
-export const GITIGNORE_SCORE = 10;
-export const MULTI_LANG_SCORE = 10;
-
-export const CODE_QUALITY_WEIGHT = 0.4;
-export const DOCUMENTATION_WEIGHT = 0.3;
-export const PROJECT_STRUCTURE_WEIGHT = 0.3;
+export const WEIGHTS = {
+  CODE_QUALITY: 0.4,
+  DOCUMENTATION: 0.3,
+  PROJECT_STRUCTURE: 0.3,
+};
