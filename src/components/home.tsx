@@ -1,24 +1,32 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { progressTrackingService } from "../services/progressTrackingService";
-import ScoreCard from "./ScoreCard";
-import VisualizationPanel from "./VisualizationPanel";
-import RecommendationPanel from "./RecommendationPanel";
-import InsightsPanel from "./InsightsPanel";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Github, Download, AlertCircle, Loader2, User, LogOut, History } from "lucide-react";
-import { Alert, AlertDescription } from "./ui/alert";
-import { githubService } from "../services/githubService";
-import { analysisEngine, AnalysisResult } from "../services/analysisEngine";
-import { reportGenerator } from "../services/reportGenerator";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { progressTrackingService } from '../services/progressTrackingService';
+import ScoreCard from './ScoreCard';
+import VisualizationPanel from './VisualizationPanel';
+import RecommendationPanel from './RecommendationPanel';
+import InsightsPanel from './InsightsPanel';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import {
+  Github,
+  Download,
+  AlertCircle,
+  Loader2,
+  User,
+  LogOut,
+  History,
+} from 'lucide-react';
+import { Alert, AlertDescription } from './ui/alert';
+import { githubService } from '../services/githubService';
+import { analysisEngine, AnalysisResult } from '../services/analysisEngine';
+import { reportGenerator } from '../services/reportGenerator';
 
 function Home() {
   const navigate = useNavigate();
   const { user, signInWithGitHub, signOut } = useAuth();
-  const [repoUrl, setRepoUrl] = useState("");
+  const [repoUrl, setRepoUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,17 +34,17 @@ function Home() {
 
   const handleAnalyze = async () => {
     if (!repoUrl.trim()) return;
-    
+
     setIsAnalyzing(true);
     setError(null);
-    
+
     try {
       // Fetch repository data from GitHub
       const repoData = await githubService.fetchRepoData(repoUrl);
-      
+
       // Analyze the repository
       const analysis = analysisEngine.analyze(repoData);
-      
+
       setAnalysisData(analysis);
 
       // Save analysis if user is authenticated
@@ -51,14 +59,14 @@ function Home() {
             code_quality_score: analysis.metrics.codeQuality,
             documentation_score: analysis.metrics.documentation,
             structure_score: analysis.metrics.projectStructure,
-            recommendations: analysis.recommendations.map(r => r.title),
+            recommendations: analysis.recommendations.map((r) => r.title),
             analysis_data: {
               repoInfo: analysis.repoInfo,
               metrics: analysis.metrics,
               technologies: analysis.technologies,
               skillGaps: analysis.skillGaps,
-              insights: analysis.insights
-            }
+              insights: analysis.insights,
+            },
           });
         } catch (saveError) {
           console.error('Error saving analysis:', saveError);
@@ -68,16 +76,23 @@ function Home() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze repository');
+      setError(
+        err instanceof Error ? err.message : 'Failed to analyze repository'
+      );
       setAnalysisData(null);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (!analysisData) return;
-    reportGenerator.generatePDF(analysisData);
+    try {
+      await reportGenerator.generatePDF(analysisData);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setError('Failed to generate PDF report. Please try again.');
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -103,16 +118,24 @@ function Home() {
             <div className="flex items-center gap-3">
               <Github className="w-8 h-8 text-slate-700" />
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">GitHub Repo Analyzer</h1>
-                <p className="text-slate-600">Analyze your repositories and get actionable insights to boost your employability</p>
+                <h1 className="text-3xl font-bold text-slate-900">
+                  GitHub Repo Analyzer
+                </h1>
+                <p className="text-slate-600">
+                  Analyze your repositories and get actionable insights to boost
+                  your employability
+                </p>
               </div>
             </div>
-            
+
             {/* User Menu */}
             <div className="flex items-center gap-4">
               {user ? (
                 <>
-                  <Button variant="outline" onClick={() => navigate('/profile')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/profile')}
+                  >
                     <History className="w-4 h-4 mr-2" />
                     View Progress
                   </Button>
@@ -124,8 +147,12 @@ function Home() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-sm">
-                      <div className="font-medium">{user.user_metadata?.full_name || user.email}</div>
-                      <div className="text-slate-500">@{user.user_metadata?.user_name}</div>
+                      <div className="font-medium">
+                        {user.user_metadata?.full_name || user.email}
+                      </div>
+                      <div className="text-slate-500">
+                        @{user.user_metadata?.user_name}
+                      </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={signOut}>
                       <LogOut className="w-4 h-4" />
@@ -147,13 +174,16 @@ function Home() {
               <div className="flex items-start gap-3">
                 <Github className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-blue-900">Track Your Progress Over Time</h3>
+                  <h3 className="font-medium text-blue-900">
+                    Track Your Progress Over Time
+                  </h3>
                   <p className="text-blue-700 text-sm mt-1">
-                    Sign in with GitHub to save your analyses and see how your repositories improve over time. 
-                    Compare scores from different analysis dates and track your development journey.
+                    Sign in with GitHub to save your analyses and see how your
+                    repositories improve over time. Compare scores from
+                    different analysis dates and track your development journey.
                   </p>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="mt-3 bg-blue-600 hover:bg-blue-700"
                     onClick={handleSignIn}
                   >
@@ -178,7 +208,7 @@ function Home() {
               className="flex-1"
               disabled={isAnalyzing}
             />
-            <Button 
+            <Button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !repoUrl.trim()}
               className="px-8"
@@ -193,7 +223,7 @@ function Home() {
               )}
             </Button>
           </div>
-          
+
           {/* Saving indicator */}
           {isSaving && (
             <div className="mt-3 text-sm text-blue-600 flex items-center gap-2">
@@ -201,7 +231,7 @@ function Home() {
               Saving analysis to your profile...
             </div>
           )}
-          
+
           {/* Example URLs */}
           <div className="mt-4 text-sm text-slate-500">
             <p className="mb-1">Try these examples:</p>
@@ -223,7 +253,9 @@ function Home() {
               </button>
               <span>•</span>
               <button
-                onClick={() => setRepoUrl('https://github.com/microsoft/vscode')}
+                onClick={() =>
+                  setRepoUrl('https://github.com/microsoft/vscode')
+                }
                 className="text-blue-600 hover:underline"
                 disabled={isAnalyzing}
               >
@@ -248,9 +280,13 @@ function Home() {
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{analysisData.repoInfo.name}</h2>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {analysisData.repoInfo.name}
+                  </h2>
                   {analysisData.repoInfo.description && (
-                    <p className="text-slate-600 mt-1">{analysisData.repoInfo.description}</p>
+                    <p className="text-slate-600 mt-1">
+                      {analysisData.repoInfo.description}
+                    </p>
                   )}
                   {user && (
                     <div className="mt-2 text-sm text-green-600 flex items-center gap-1">
@@ -261,11 +297,15 @@ function Home() {
                 </div>
                 <div className="flex gap-4 text-sm text-slate-600">
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900">{analysisData.repoInfo.stars}</div>
+                    <div className="font-semibold text-slate-900">
+                      {analysisData.repoInfo.stars}
+                    </div>
                     <div>Stars</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900">{analysisData.repoInfo.forks}</div>
+                    <div className="font-semibold text-slate-900">
+                      {analysisData.repoInfo.forks}
+                    </div>
                     <div>Forks</div>
                   </div>
                 </div>
@@ -273,7 +313,7 @@ function Home() {
             </div>
 
             {/* Score Overview */}
-            <ScoreCard 
+            <ScoreCard
               score={analysisData.score}
               metrics={analysisData.metrics}
             />
@@ -283,36 +323,33 @@ function Home() {
 
             {/* Visualizations and Recommendations */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <VisualizationPanel 
+              <VisualizationPanel
                 technologies={analysisData.technologies}
                 skillGaps={analysisData.skillGaps}
               />
-              <RecommendationPanel 
+              <RecommendationPanel
                 recommendations={analysisData.recommendations}
               />
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-center gap-4">
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
-                  setRepoUrl("");
+                  setRepoUrl('');
                   setAnalysisData(null);
                   setError(null);
                 }}
               >
                 Analyze Another Repository
               </Button>
-              <Button 
-                onClick={handleGenerateReport}
-                className="gap-2"
-              >
+              <Button onClick={handleGenerateReport} className="gap-2">
                 <Download className="w-4 h-4" />
                 Generate Report
               </Button>
               {user && (
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => navigate('/profile')}
                   className="gap-2"
