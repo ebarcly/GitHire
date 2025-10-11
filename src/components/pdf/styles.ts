@@ -272,7 +272,7 @@ export const styles = StyleSheet.create({
   careerLevel: {
     fontSize: 24,
     fontWeight: 'bold',
-    textTransform: 'upperfirst',
+    textTransform: 'capitalize',
     color: 'white',
     marginBottom: 8,
   },
