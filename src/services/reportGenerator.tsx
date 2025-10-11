@@ -1,12 +1,36 @@
+import React from 'react';
 import { AnalysisResult } from './analysisEngine';
+import { pdf } from '@react-pdf/renderer';
+import PDFDocument from '../components/PDFDocument';
 
 export class ReportGenerator {
-  generatePDF(analysis: AnalysisResult): void {
-    // Create a simple text report that can be downloaded
+  async generatePDF(analysis: AnalysisResult): Promise<void> {
+    try {
+      // Generate PDF using react-pdf/renderer
+      const MyDocument = () => React.createElement(PDFDocument, { analysis });
+      const blob = await pdf(React.createElement(MyDocument)).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${analysis.repoInfo.name}-analysis-report.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // Fallback to text report if PDF generation fails
+      this.generateTextReport(analysis);
+    }
+  }
+
+  private generateTextReport(analysis: AnalysisResult): void {
+    // Fallback text report generation
     const reportContent = this.generateReportContent(analysis);
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `${analysis.repoInfo.name}-analysis-report.txt`;
@@ -18,7 +42,7 @@ export class ReportGenerator {
 
   private generateReportContent(analysis: AnalysisResult): string {
     const date = new Date().toLocaleDateString();
-    
+
     return `
 ================================================================================
                     GITHUB REPOSITORY ANALYSIS REPORT
@@ -60,7 +84,9 @@ ${this.getMetricAssessment(analysis.metrics.projectStructure)}
 ================================================================================
 
 Detected Technologies:
-${analysis.technologies.map((tech, i) => `${i + 1}. ${tech}`).join('\n')}
+${analysis.technologies
+  .map((tech, i) => `${i + 1}. ${tech.name} (${tech.category})`)
+  .join('\n')}
 
 Market Alignment: Your technology stack aligns well with current industry demands.
 
@@ -69,7 +95,12 @@ Market Alignment: Your technology stack aligns well with current industry demand
 ================================================================================
 
 Areas for Improvement:
-${analysis.skillGaps.map((gap, i) => `${i + 1}. ${gap}`).join('\n')}
+${analysis.skillGaps
+  .map(
+    (gap, i) =>
+      `${i + 1}. ${gap.skill} - ${gap.reason} (${gap.priority} priority)`
+  )
+  .join('\n')}
 
 These skills are commonly expected by employers and would strengthen your profile.
 
@@ -77,7 +108,14 @@ These skills are commonly expected by employers and would strengthen your profil
                       PERSONALIZED RECOMMENDATIONS
 ================================================================================
 
-${analysis.recommendations.map((rec, i) => `${i + 1}. ${rec}`).join('\n\n')}
+${analysis.recommendations
+  .map(
+    (rec, i) =>
+      `${i + 1}. ${rec.title} (${rec.priority} priority)\n   ${
+        rec.description
+      }\n   Impact: +${rec.scoreImpact} points | Effort: ${rec.estimatedEffort}`
+  )
+  .join('\n\n')}
 
 ================================================================================
                               NEXT STEPS
@@ -96,9 +134,11 @@ ${analysis.recommendations.map((rec, i) => `${i + 1}. ${rec}`).join('\n\n')}
   }
 
   private getScoreLabel(score: number): string {
-    if (score >= 90) return '🌟 EXCELLENT - Highly competitive for top positions';
+    if (score >= 90)
+      return '🌟 EXCELLENT - Highly competitive for top positions';
     if (score >= 80) return '✅ VERY GOOD - Strong candidate profile';
-    if (score >= 70) return '👍 GOOD - Solid foundation with room for improvement';
+    if (score >= 70)
+      return '👍 GOOD - Solid foundation with room for improvement';
     if (score >= 60) return '⚠️  FAIR - Needs significant improvements';
     return '❌ NEEDS WORK - Major improvements required';
   }
@@ -116,17 +156,22 @@ ${analysis.recommendations.map((rec, i) => `${i + 1}. ${rec}`).join('\n\n')}
   }
 
   generateJSON(analysis: AnalysisResult): void {
-    const jsonContent = JSON.stringify(analysis, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${analysis.repoInfo.name}-analysis.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    try {
+      const jsonContent = JSON.stringify(analysis, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${analysis.repoInfo.name}-analysis.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating JSON report:', error);
+      throw new Error('Failed to generate JSON report');
+    }
   }
 }
 
