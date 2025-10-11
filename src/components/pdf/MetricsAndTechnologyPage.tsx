@@ -97,7 +97,7 @@ const MetricsAndTechnologyPage: React.FC<MetricsAndTechnologyPageProps> = ({ ana
         <View style={styles.techGrid}>
           {(analysis.technologies || []).map((tech, index) => (
             <Text key={index} style={styles.techBadge}>
-              {typeof tech === 'string' ? tech : tech.name}
+              {tech.name}
             </Text>
           ))}
         </View>
